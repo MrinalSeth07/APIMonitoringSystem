@@ -1,87 +1,105 @@
-import amqb from "amqb"
+import amqp from "amqplib"
+import config from "./index.js"
 import logger from "./logger.js"
-import config from "./ index.js"
 
-class RabbitMQConnetion{
-    constructor(){
+class RabbitMQConnection {
+    constructor() {
         this.connection = null;
         this.channel = null;
-        this.isConnecting = null;
+        this.isConnecting = false;
     }
-    async connect(){
-        if(this.channel){
+
+    async connect() {
+        if (this.channel) {
             return this.channel;
         }
-        if(this.isConnecting){
+
+        if (this.isConnecting) {
             await new Promise((resolve) => {
-                const checkinterval = setTimeout(()=>{
-                    if(!this.isConnecting){
-                        clearInterval(checkinterval);
+                const checkInterval = setInterval(() => {
+                    if (!this.isConnecting) {
+                        clearInterval(checkInterval);
                         resolve()
-                    } 
-                },100)
+                    }
+                }, 100)
             })
-            return this.channel;
+            return this.channel
         }
-        try{
+
+        try {
             this.isConnecting = true;
-            logger.info("Connecting to the RabbitMQ" , config.rabbitmq.url);
-            this.connection = await amqb.connect(config.rabbitmq.url);
-            this.channel = await this.connection.createchannel();
+
+            logger.info("Connecting to RabbitMQ", config.rabbitmq.url)
+            this.connection = await amqp.connect(config.rabbitmq.url);
+            this.channel = await this.connection.createChannel();
+
             // Creating key | Queue name
-            const dlqname = `${config.rabbitmq.queue}.dlq `
-            // Dead letter queue
-            await this.channel.assertQueue(dlqname , {
-                durable: true,
+            const dlqName = `${config.rabbitmq.queue}.dlq` // api_hits | api_hits.dlq
+
+            // DL Queue
+            await this.channel.assertQueue(dlqName, {
+                durable: true
             })
-            // normal queue
-            await this.channel.assertQueue(config.rabbitmq.queue,{
+
+            // Normal Queue 
+            await this.channel.assertQueue(config.rabbitmq.queue, {
                 durable: true,
-                arguements: {
-                    "x-dead-letter-exchange" : "",
-                    "x-dead-letter-routing-key" : dlqname,
+                arguments: {
+                    "x-dead-letter-exchange": "",
+                    "x-dead-letter-routing-key": dlqName
                 }
             })
 
-            logger.info("RabbitMQ connected , queue: " , config.rabbitmq.queue )
-            this.connection.on("close" ,()=>{
-                logger.warn(`RabbitMQ connection closed`);
+            logger.info("RabbitMQ connected, queue:", config.rabbitmq.queue)
+
+            this.connection.on("close", () => {
+                logger.warn('RabbitMQ connection closed');
                 this.connection = null;
                 this.channel = null;
             })
+
+            this.connection.on("error", (err) => {
+                logger.error('RabbitMQ connection err', err);
+                this.connection = null;
+                this.channel = null;
+            })
+
             this.isConnecting = false;
-            return this.channel;
-        }
-        catch(error){
+            return this.channel
+        } catch (error) {
             this.isConnecting = false;
-            logger.error("failed to connect to the RabbitMQ" , error);
-            throw error;
+            logger.error("Failed to connect to RabbitMQ", error)
+            throw error
         }
     }
 
-    getChannel(){
+    getChannel() {
         return this.channel;
     }
-    getStatus(){
-        if(!this.connect || !this.channel()) return "disconnected";
-        if(this.connection.closing) return "closing";
-        return "connected";
+
+
+    getStatus() {
+        if (!this.connect || !this.channel) return "disconnected";
+        if (this.connect.closing) return "closing";
+        return "connected"
     }
-    async close(){
-        try{
-            if(this.channel){
+
+    async close() {
+        try {
+            if (this.channel) {
                 await this.channel.close();
                 this.channel = null;
             }
-            if(this.connection){
+            if (this.connection) {
                 await this.connection.close();
                 this.connection = null;
             }
-            logger.info("RabbitMQ connection closed");
-        }
-        catch (error){
-            logger.error("Error in closing the RABBITMQ connection", error);
+
+            logger.info("RabbitMQ connection closed")
+        } catch (error) {
+            logger.error("Error in closing RabbitMQ connection:", error)
         }
     }
 }
-export default new RabbitMQConnetion();
+
+export default new RabbitMQConnection()

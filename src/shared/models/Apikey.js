@@ -1,5 +1,5 @@
 import mongoose, { Collection } from "mongoose";
-import isValidPassword from "../utils/SecurityUtils.js";
+import isValidPassword from "../../../utils/SecurityUtils.js";
 
 const apiKeySchema = new mongoose.Schema({
     keyId: {

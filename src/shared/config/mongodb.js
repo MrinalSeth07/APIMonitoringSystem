@@ -1,67 +1,72 @@
-import mongoose, { mongo } from "mongoose";
-import config from "./index";
-import logger from "./logger";
+import mongoose from "mongoose"
+import config from "./index.js"
+import logger from "./logger.js"
 
-
-
-/* 
-    MongoDB connector implemented in the Singleton design pattern
-*/
-class MongoConnection{
-    constructor(){
+/**
+ * MongoDB database manager/connector
+ */
+class MongoConnection {
+    constructor() {
         this.connection = null;
     }
-    /* 
-    Connect to MongoDB
-    @return  {Promise <mongoose.connection>}
-    */
-    async connect(){
-        try{
-            if(this.connection){
-                logger.infor("MongoDb already Connnected");
+
+    /**
+     * Connect to MongoDB
+     * @returns {Promise<mongoose.Connection>}
+     */
+    async connect() {
+        try {
+            if (this.connection) {
+                logger.info("Mongodb already connected");
                 return this.connection
             }
 
-            await mongoose.connect(config.mongo.url,{
+            await mongoose.connect(config.mongo.uri, {
                 dbName: config.mongo.dbName
             })
+
             this.connection = mongoose.connection;
-            logger.info(`MongodB connected : ${config.mongo.uri}`);
+
+            logger.info(`MongoDB connected: ${config.mongo.uri}`);
+
             this.connection.on("error", err => {
-                logger.error("MongoDB connection error " , err)
+                logger.error("MongoDB connection error", err)
             })
-            this.connection.on("disconnected", err => {
-                logger.error("MongoDB Disconnected " , err)
+
+            this.connection.on("disconnected", () => {
+                logger.error("MongoDB Disconnected")
             })
+
             return this.connection
-        } catch (error){
-            logger.error("Failed to connect to MongoDB" , error);
+        } catch (error) {
+            logger.error('Failed to connect to MongoDB:', error);
             throw error;
         }
     }
-    /* 
-    Disconnet to MongoDB
-    */
-    async disconnect(){
-        try{
-            if(this.connection){
+
+    /**
+     * This helps to disconnet the active mongodb connection
+     */
+    async disconnect() {
+        try {
+            if (this.connection) {
                 await mongoose.disconnect();
                 this.connection = null;
-                logger.info("MongoDB disconnected")
-                
+                logger.info("Mongodb disconnected!")
             }
-        }
-        catch (error){
-            logger.error("Failed to disconnect to MongoDB" , error);
+        } catch (error) {
+            logger.error('Failed to disconnect to MongoDB:', error);
             throw error;
         }
     }
+
     /**
-     * Get the active Connection
+     * Get the active connection
+     * @returns {mongoose.Connection}
      */
-    getConnection(){
+    getConnection() {
         return this.connection;
     }
 }
-export default MongoConnection;
 
+export default new MongoConnection();

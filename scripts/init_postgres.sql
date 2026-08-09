@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXITS endpoint_metrics(
     max_latency NUMERIC(0,3) DEFAULT 0.000,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRETN_TIMESTAMP,
-    UNIQUE(client_id , service_name , endpoint , method , time_bucket),
+    UNIQUE(client_id , service_name , endpoint , method , time_bucket), --insert if not present else upsert
 );
 --TIME BUCKET :- When requesting analytics, metrics, or financial data from an API, a time bucket groups continuous timestamps into discrete blocks.
 CREATE INDEX IF NOT EXITS idx_endpoint_metrics_client_id ON endpoint_metrics(client_id);
