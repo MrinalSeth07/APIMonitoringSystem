@@ -17,7 +17,7 @@ const config = {
     //Postgres
     postgres:
     {
-        host: process.env.PG_HOST || 'localhost',
+        host: process.env.PG_HOST ,
         port: parseInt(process.env.PORT || "5432" , 10),
         database: process.env.PG_DATABASE,
         user: process.env.PG_USER,
