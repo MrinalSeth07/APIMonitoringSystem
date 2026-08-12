@@ -1,4 +1,4 @@
-import winston from "winston";
+import winston, { debug } from "winston";
 import config from "./index.js"
 
 /**

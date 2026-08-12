@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs"
-import SecurityUtils from "../../../utils/SecurityUtils.js";
+import SecurityUtils from "../utils/SecurityUtils.js";
 
 /**
  * User Schema - Represents a user in the system with authentication and role-based access control.
@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema({
         default: 'client_viewer'
     },
     clientId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId, // 123
         ref: "Client",
         required: function () {
             return this.role !== "super_admin"
@@ -111,6 +111,7 @@ userSchema.pre('save', async function (next) {
     }
 });
 
+// Indexes for efficient querying
 userSchema.index({ clientId: 1, isActive: 1 });
 userSchema.index({ role: 1 })
 

@@ -1,4 +1,4 @@
-class ResponseFormatte{
+class ResponseFormatter{
     static success(data = null, message = "Success", statusCode = 200) {
         return {
             success: true,
