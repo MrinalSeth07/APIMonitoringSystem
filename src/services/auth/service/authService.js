@@ -39,6 +39,9 @@ export class AuthService{
                 token
             }
         }
-        catch(error)
+        catch(error){
+            logger.error("Error in onboarding Super Admin " , error)
+            throw error;
+        }
     }
 }
